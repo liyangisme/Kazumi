@@ -26,6 +26,15 @@ jobs:
       - name: Clone repository
         uses: actions/checkout@v4
 
+      # cmake and ninja are not optional: the next step patches a CMakeLists.txt
+      # in the jni package, and media_kit builds native code. Upstream's own
+      # release workflow installs these too -- omitting them fails the build
+      # step with a confusing cmake/ninja "not found".
+      - name: Install native build tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y clang cmake ninja-build pkg-config
+
       - name: Set up JDK 17
         uses: actions/setup-java@v4
         with:
