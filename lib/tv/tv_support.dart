@@ -72,15 +72,15 @@ class TvEnvironment {
 /// Buttons, ListTiles and InkWells listen for. Binding to [ActivateIntent]
 /// directly would re-enter that same action and recurse.
 ///
-/// [LogicalKeyboardKey.enter] and [LogicalKeyboardKey.space] are already bound
-/// by `WidgetsApp`, and are listed here so a remote reporting either works even
-/// if a future Flutter release drops the default.
+/// Each key is wrapped in a [SingleActivator]: a bare `LogicalKeyboardKey` is
+/// a key id, not a shortcut activator, and no longer satisfies the map's key
+/// type.
 const Map<ShortcutActivator, Intent> _tvConfirmShortcuts =
     <ShortcutActivator, Intent>{
-  LogicalKeyboardKey.select: ButtonActivateIntent(),
-  LogicalKeyboardKey.numpadEnter: ButtonActivateIntent(),
-  LogicalKeyboardKey.enter: ButtonActivateIntent(),
-  LogicalKeyboardKey.space: ButtonActivateIntent(),
+  SingleActivator(LogicalKeyboardKey.select): ButtonActivateIntent(),
+  SingleActivator(LogicalKeyboardKey.numpadEnter): ButtonActivateIntent(),
+  SingleActivator(LogicalKeyboardKey.enter): ButtonActivateIntent(),
+  SingleActivator(LogicalKeyboardKey.space): ButtonActivateIntent(),
 };
 
 /// Binds a TV remote's confirm key across its hardware variants.
