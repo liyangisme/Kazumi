@@ -16,6 +16,7 @@ import 'package:kazumi/navigation.dart';
 import 'package:kazumi/utils/constants.dart';
 import 'package:kazumi/utils/device.dart';
 import 'package:kazumi/utils/theme.dart';
+import 'package:kazumi/tv/tv_support.dart';
 
 class AppWidget extends StatefulWidget {
   const AppWidget({super.key});
@@ -141,6 +142,11 @@ class _AppWidgetState extends State<AppWidget>
     Color? color,
     ColorScheme? colorScheme,
   }) {
+    // Flutter paints the focus overlay of Buttons, ListTiles and InkWells with
+    // focusColor. The stock tint is tuned for a screen held 30cm away and is
+    // near-invisible across a room, so TVs get a much stronger one — without
+    // it there is no way to tell where the D-pad currently is.
+    final isTv = TvScope.of(context).isTv;
     return ThemeData(
       useMaterial3: true,
       fontFamily: fontFamily,
@@ -150,6 +156,7 @@ class _AppWidgetState extends State<AppWidget>
       progressIndicatorTheme: progressIndicatorTheme2024,
       sliderTheme: sliderTheme2024,
       pageTransitionsTheme: pageTransitionsTheme2024,
+      focusColor: isTv ? Colors.white.withValues(alpha: 0.32) : null,
     );
   }
 
@@ -315,6 +322,9 @@ class _AppWidgetState extends State<AppWidget>
           themeMode: themeProvider.themeMode,
           scaffoldMessengerKey: rootScaffoldMessengerKey,
           routerConfig: ModularApp.routerConfigOf(context),
+          builder: (context, child) => TvSupport(
+            child: child ?? const SizedBox.shrink(),
+          ),
         );
       },
     );

@@ -22,6 +22,7 @@ import 'package:kazumi/services/platform/desktop_window_config.dart';
 import 'package:kazumi/services/platform/webview_feature_service.dart';
 import 'package:kazumi/bean/dialog/dialog_helper.dart';
 import 'package:kazumi/navigation.dart';
+import 'package:kazumi/tv/tv_support.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -96,6 +97,8 @@ void main() async {
   }
   await MeteredNetworkService.refresh();
   ProxyManager.applyProxy();
+  // Resolved before the first frame so TV text scaling applies from the start.
+  final tvEnvironment = await TvEnvironment.load();
   runApp(
     ModularApp(
       module: appModule,
@@ -105,7 +108,7 @@ void main() async {
       provide: (scoped) {
         scoped.addChangeNotifier<ThemeProvider>(ThemeProvider.new);
       },
-      child: const AppWidget(),
+      child: TvScope(environment: tvEnvironment, child: const AppWidget()),
     ),
   );
 }

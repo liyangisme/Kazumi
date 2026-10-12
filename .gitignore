@@ -55,3 +55,14 @@ android/build/reports/problems/
 **/macos/Pods/
 **/ios/Podfile.lock
 **/macos/Podfile.lock
+
+# 本地 TV 部署工具（adb），不入库
+/tools/
+
+# 电视下载的 APK
+*.apk
+/.workbuddy/
+
+# ExFAT 资源叉（工作区在 T5 上，git 会不断产生这些）
+._*
+.DS_Store

@@ -126,6 +126,10 @@ class MainActivity: AudioServiceActivity() {
             } else if (call.method == "getAndroidSdkVersion") {
                 val sdkVersion = getAndroidSdkVersion()
                 result.success(sdkVersion)
+            } else if (call.method == "isLeanback") {
+                // Google TV / Android TV feature. Dart uses this to decide
+                // whether to scale text for ten-foot viewing.
+                result.success(isLeanbackDevice())
             } else if (call.method == "setSystemBarsHidden") {
                 systemBarsHidden = call.arguments as? Boolean ?: false
                 applySystemBarsState()
@@ -204,6 +208,10 @@ class MainActivity: AudioServiceActivity() {
 
     private fun getAndroidSdkVersion(): Int {
         return Build.VERSION.SDK_INT
+    }
+
+    private fun isLeanbackDevice(): Boolean {
+        return packageManager.hasSystemFeature(PackageManager.FEATURE_LEANBACK)
     }
 
     // System bars belong to the full size window; replayed on leaving PiP.
