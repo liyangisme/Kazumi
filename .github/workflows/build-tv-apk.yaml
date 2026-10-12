@@ -1,1 +1,80 @@
+name: Build TV APK
 
+# Builds an installable Android TV / Google TV APK.
+#
+# TVs are arm64 and run a plain Android runtime, so this is the normal Android
+# build restricted to that ABI. The TV-specific parts (LEANBACK_LAUNCHER
+# category, banner, leanback feature) live in the manifest and are picked up
+# automatically — there is no separate TV target in this project.
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - tv-support
+    paths:
+      - 'android/**'
+      - 'lib/**'
+      - 'pubspec.yaml'
+      - '.github/workflows/build-tv-apk.yaml'
+
+jobs:
+  build-tv-apk:
+    name: "Android TV arm64 APK"
+    runs-on: "ubuntu-latest"
+
+    steps:
+      - name: Clone repository
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2.16.0
+        id: flutter-action
+        with:
+          channel: stable
+          flutter-version-file: pubspec.yaml
+
+      - name: Get Flutter dependencies
+        run: flutter pub get
+
+      - name: Remove build id
+        run: sed -i -e 's/-Wl,/-Wl,--build-id=none,/' ${{ steps.flutter-action.outputs.PUB-CACHE-PATH }}/hosted/pub.dev/jni-*/src/CMakeLists.txt
+
+      - name: Build APK for arm64
+        run: >-
+          flutter build apk --release
+          --target-platform android-arm64
+          --dart-define=DANDANAPI_APPID=$DANDANAPI_APPID
+          --dart-define=DANDANAPI_KEY=$DANDANAPI_KEY
+          --dart-define=KAZUMI_APPID=$KAZUMI_APPID
+          --dart-define=KAZUMI_KEY=$KAZUMI_KEY
+
+      - name: Package
+        run: cp build/app/outputs/flutter-apk/app-release.apk Kazumi-tv-arm64.apk
+
+      # A build that silently lost the leanback category would install but
+      # never show up on the launcher, which is the exact failure this
+      # workflow exists to prevent.
+      - name: Verify TV manifest entries survived the build
+        run: |
+          set -euo pipefail
+          command -v aapt2 >/dev/null || {
+            echo "aapt2 unavailable; skipping manifest verification"; exit 0; }
+          BADGING=$(aapt2 dump badging Kazumi-tv-arm64.apk)
+          echo "$BADGING" | grep -q 'LEANBACK_LAUNCHER' \
+            || { echo "::error::LEANBACK_LAUNCHER missing from built APK"; exit 1; }
+          echo "$BADGING" | grep -q "banner" \
+            || { echo "::error::banner missing from built APK"; exit 1; }
+          echo "TV manifest entries verified."
+
+      - name: Upload TV APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: kazumi-tv-apk
+          path: Kazumi-tv-arm64.apk
+          if-no-files-found: error
